@@ -27,6 +27,7 @@ from deployment import application_deploy
 import argparse
 import yaml
 import random
+import os.path
 
 # GLOBAL VARIABLES (bad practice)
 N_DEVICES = 40
@@ -75,8 +76,11 @@ def main():
 
     generate_and_plot_devices(devices)
 
-    #create_db(parsed_yaml['database_url']['device'])
-    #populate_db(devices, parsed_yaml['database_url']['device'])
+
+    if not os.path.isfile(parsed_yaml['database_url']['device']):
+        create_db(parsed_yaml['database_url']['device'])
+        populate_db(devices, parsed_yaml['database_url']['device'])
+
     dump_from_db(devices_list, parsed_yaml['database_url']['device'])
 
     physical_network_link_list = [0]*len(devices_list)*len(devices_list)
