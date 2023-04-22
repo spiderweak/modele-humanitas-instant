@@ -29,6 +29,8 @@ import yaml
 import random
 import os.path
 
+import logging
+
 # GLOBAL VARIABLES (bad practice)
 N_DEVICES = 40
 
@@ -69,12 +71,27 @@ def main():
     with open(options.config, 'r') as config_file:
         parsed_yaml = yaml.safe_load(config_file)
 
-    if parsed_yaml['logging']:
-        if parsed_yaml['logfile']:
-            logfilename = parsed_yaml['logfile']
-        else:
-            logfilename = 'log.txt'
+    # Log level
+    match parsed_yaml['loglevel']:
+        case 'error':
+            loglevel = logging.ERROR
+        case 'warning':
+            loglevel = logging.WARNING
+        case 'info':
+            loglevel = logging.INFO
+        case 'debug':
+            loglevel = logging.DEBUG
+        case _:
+            loglevel = logging.WARNING
 
+    # Log file
+    if parsed_yaml['logfile']:
+        logfilename = parsed_yaml['logfile']
+    else:
+        logfilename = 'log.txt'
+
+
+    logging.basicConfig(filename=logfilename, encoding='utf-8', level=loglevel)
     devices = list()
 
     devices_list = []
@@ -101,16 +118,13 @@ def main():
             values = application_deploy(my_application, devices_list[current_device_id], devices_list, physical_network_link_list)
             print("Need to implement listener")
 
-            with open(logfilename, 'a') as logfile:
-                if values[0]:
-                    logfile.write(f"\nDeployment success\n")
-                    logfile.write(f"application {my_application.id} successfully deployed\n")
-                    for i in range(len(my_application.processus_list)):
-                        logfile.write(f"Deploying processus {my_application.processus_list[i].id} on device {values[3][i]}\n")
-                    logfile.write("\n")
-                else:
-                    logfile.write(f"\nDeployment failure for application {my_application.id}\n")
-
+            if values[0]:
+                logging.info(f"Deployment success")
+                logging.info(f"application {my_application.id} successfully deployed")
+                for i in range(len(my_application.processus_list)):
+                    logging.info(f"Deploying processus {my_application.processus_list[i].id} on device {values[3][i]}")
+            else:
+                logging.error(f"\nDeployment failure for application {my_application.id}")
 
     return values[0],values[3]
 

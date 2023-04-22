@@ -1,4 +1,4 @@
-logging : True
+loglevel : info
 
 logfile : log.txt
 
