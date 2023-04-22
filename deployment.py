@@ -1,5 +1,6 @@
 from modules.Path import Path
 
+import logging
 
 # Let's define how to deploy an application on the system.
 def deployable_proc(proc, device):
@@ -85,6 +86,8 @@ def application_deploy(app, device, devices_list, physical_network_link_list):
     deployed_onto_devices = list()
     first_dev_exclusion_list = list()
 
+    logging.debug(f"Deployment procedure from {device.getDeviceID()}")
+
     deployment_success = True
 
     tentatives = 0
@@ -95,6 +98,7 @@ def application_deploy(app, device, devices_list, physical_network_link_list):
         if len(deployed_onto_devices) == 0 and len(first_dev_exclusion_list)==0:
             distance_from_device = {i: device.routing_table[i][1] for i in device.routing_table}
             sorted_distance_from_device = sorted(distance_from_device.items(), key=lambda x: x[1])
+            logging.debug(f"Deployment source {sorted_distance_from_device[0][0]}")
         else:
             if len(deployed_onto_devices)!= 0:
                 new_source_device = devices_list[deployed_onto_devices[-1]]
@@ -113,9 +117,16 @@ def application_deploy(app, device, devices_list, physical_network_link_list):
             distance_from_device = {i: new_source_device.routing_table[i][1] for i in new_source_device.routing_table}
             sorted_distance_from_device = sorted(distance_from_device.items(), key=lambda x: x[1])
 
+            logging.debug(f"Switching deployment source to {sorted_distance_from_device[0][0]}")
 
         for device_id, deployment_latency in sorted_distance_from_device:
+
+            logging.debug(f"Testing deployment on device {device_id}")
+
             if deployable_proc(app.processus_list[len(deployed_onto_devices)], devices_list[device_id]):
+
+                logging.debug(f"Deployment possible on device {device_id}")
+
                 deployed_onto_devices.append(device_id)
 
                 if linkability(deployed_onto_devices, app.proc_links, devices_list, physical_network_link_list):
@@ -139,8 +150,7 @@ def application_deploy(app, device, devices_list, physical_network_link_list):
                                 physical_network_link_list[path_id].useBandwidth(app.proc_links[len(deployed_onto_devices)-1][i])
                                 operational_latency += physical_network_link_list[path_id].getPhysicalNetworkLinkLatency()
                             else:
-                                print("Error here, proper error to add, should be unreachable for now")
-
+                                logging.error(f"Physical network link error, expexted PhysicalNetworkLink, got {physical_network_link_list[path_id]}")
 
                     # get values
 
@@ -150,6 +160,8 @@ def application_deploy(app, device, devices_list, physical_network_link_list):
                     break
                 else:
                     deployed_onto_devices.pop()
+            else:
+                logging.debug(f"Impossible to deploy on {device_id}, testing next closest device")
 
     if (not deployment_success) or (tentatives == 2000):
         for i in range(len(deployed_onto_devices)):
