@@ -24,15 +24,25 @@ class Application:
             None
 
         Returns:
-            result : int, Device ID
+            result : int, Application ID
         """
         result = cls.id
         cls.id +=1
         return result
 
 
-    # An application is defined as a graph of processus (array of array, for now, might be a networkx graph)
     def __init__(self, num_procs = 1) -> None:
+        """
+        An application is defined as a graph of processus
+        (array of array, for now, might be a networkx graph)
+        Initializes to empty data
+
+        Args:
+            num_procs : int, default 1, number of processus in the application
+
+        Returns:
+            None
+        """
 
         self.id = Application._generate_id()
         # Initializes the number of processus required by the application
@@ -50,6 +60,15 @@ class Application:
         self.proc_links = np.zeros((num_procs, num_procs))
 
     def setAppID(self, id):
+        """
+        Used to set an application's ID by hand if necessary
+
+        Args:
+            id : int, new application ID
+
+        Returns:
+            None
+        """
         self.id=id
 
     # Random application initialization
@@ -58,7 +77,7 @@ class Application:
         Random initialization of the application
 
         Args:
-            num_proc : int, number of processus to consider
+            num_procs : int, number of processus to consider
             num_proc_random : Bool, default to True for random number of processus deployed between 1 and num_proc
 
         Returns:
@@ -102,9 +121,19 @@ class Application:
         self.proc_links = proc_links
 
     def app_yaml_parser(self, app_yaml):
+        """
+        Parser to load application characteristics from yaml file.
+
+        Args:
+            app_yaml : dictionary from yaml file content
+
+        Returns:
+            None
+        """
         application_content = app_yaml["Application"]
 
         self.num_procs = len(application_content)
+        self.processus_list = list()
 
         for yaml_processus in application_content:
             new_processus = Processus()

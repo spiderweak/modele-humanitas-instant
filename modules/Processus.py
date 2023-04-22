@@ -1,12 +1,41 @@
 import random
 
 class Processus:
-    # A processus is a sub-part of an application
-    def __init__(self) -> None:
-        # Initializes the processus with basic value
 
-        # ID set to -1
-        self.id = -1
+    id = 0
+
+
+    @classmethod
+    def _generate_id(cls):
+        """
+        Class method for id generation
+        Assigns id then increment for next generation
+
+        Args:
+            None
+
+        Returns:
+            result : int, Processus ID
+        """
+        result = cls.id
+        cls.id +=1
+        return result
+
+
+    def __init__(self) -> None:
+        """
+        A processus is a sub-part of an application
+        A processus is defined as a values corresponding to resource requests
+        Initializes the processus values with zeros
+
+        Args:
+            num_procs : int, default 1, number of processus in the application
+
+        Returns:
+            None
+        """
+
+        self.id = Processus._generate_id()
 
         # A process requests ressources among the 4 resources defined : CPU, GPU, Memory and Disk
         self.cpu_request = 0
@@ -14,43 +43,116 @@ class Processus:
         self.mem_request = 0 * 1024
         self.disk_request = 0 * 1024
 
+
     def setProcessusID(self, id):
-        # Set processus ID
+        """
+        Used to set a processus's ID by hand if necessary
+
+        Args:
+            id : int, new processus ID
+
+        Returns:
+            None
+        """
         self.id = id
 
+
     def getProcessusID(self):
-        # Returns processus ID
+        """
+        Used to get a processus's ID
+
+        Args:
+            None
+
+        Returns:
+            id : int, processus ID
+        """
         return self.id
 
+
     def setProcessusCPURequest(self, cpu):
-        # Sets CPU Request
+        """
+        Sets Processus CPU Request
+
+        Args:
+            cpu : float, number of CPUs to request from device.
+
+        Returns:
+            None
+        """
         self.cpu_request = cpu
 
     def setProcessusGPURequest(self, gpu):
-        # Sets GPU Request
+        """
+        Sets Processus GPU Request
+
+        Args:
+            gpu : float, number of GPUs to request from device.
+
+        Returns:
+            None
+        """
         self.gpu_request = gpu
 
     def setProcessusMemRequest(self, mem):
-        # Sets Memory Request
+        """
+        Sets Processus Memory Request
+
+        Args:
+            mem : float, quantity of memory to request from device, in MBytes.
+
+        Returns:
+            None
+        """
         self.mem_request = mem
 
     def setProcessusDiskRequest(self, disk):
-        # Sets Disk Space Request
+        """
+        Sets Processus Disk Space Request
+
+        Args:
+            disk : float, quantity of disk space to request from device, in MBytes.
+
+        Returns:
+            None
+        """
         self.disk_request = disk
 
-    # Random processus initialization
+
     def randomProcInit(self):
-        # Random number of CPU between 0.5 and 4
+        """
+        Random processus initialization :
+            Random number of CPU between 0.5 and 4
+            Random number of GPU between 0 and 8
+            Random Memory between 0.1 and 4 GigaBytes
+            Random Disk space between 10 and 100 GigaBytes
+
+        Args:
+            None
+
+        Returns:
+            None
+        """
+
         self.setProcessusCPURequest(random.choice([0.5,1,2,3,4]))
-        # Random number of GPU between 0 and 8
+
         self.setProcessusGPURequest(random.choice([0,0.5,1,4,6,8]))
-        # Random Memory between 0.1 and 4 GigaBytes
+
         self.setProcessusMemRequest((random.random() * 0.975 + 0.025) * 4 * 1024)
-        # Random Disk space between 10 and 100 GigaBytes
+
         self.setProcessusDiskRequest((random.random() * 9 + 1) * 10 * 1024)
 
-    def processus_yaml_parser(self, processus_yaml):
 
+    def processus_yaml_parser(self, processus_yaml):
+        """
+        Parser to load application characteristics from yaml file, usually called from the app configuration.
+
+        Args:
+            processus_yaml : dictionary from yaml file content.
+
+        Returns:
+            None
+        """
         processus_content = processus_yaml['Processus']
 
         self.setProcessusCPURequest(processus_content['cpu'])

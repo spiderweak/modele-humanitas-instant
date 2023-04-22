@@ -12,6 +12,17 @@ from modules.PhysicalNetworkLink import PhysicalNetworkLink
 class Path:
 
     def __init__(self) -> None:
+        """
+        Initializes the Path with default values.
+        Assigns Source and destination ID to placeholders.
+        Initialises lists to empty values.
+
+        Args:
+            None
+
+        Returns:
+            None
+        """
         self.source_id = -1
         self.destination_id = -1
 

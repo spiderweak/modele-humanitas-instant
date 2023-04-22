@@ -68,14 +68,18 @@ def main():
 
     with open(options.config, 'r') as config_file:
         parsed_yaml = yaml.safe_load(config_file)
-        print(parsed_yaml)
+
+    if parsed_yaml['logging']:
+        if parsed_yaml['logfile']:
+            logfilename = parsed_yaml['logfile']
+        else:
+            logfilename = 'log.txt'
 
     devices = list()
 
     devices_list = []
 
     generate_and_plot_devices(devices)
-
 
     if not os.path.isfile(parsed_yaml['database_url']['device']):
         create_db(parsed_yaml['database_url']['device'])
@@ -86,7 +90,6 @@ def main():
     physical_network_link_list = [0]*len(devices_list)*len(devices_list)
     generate_routing_table(devices_list, physical_network_link_list)
 
-
     if options.simulate:
         simulate_deployments(devices_list, physical_network_link_list)
     else:
@@ -96,8 +99,20 @@ def main():
             app_yaml = yaml.safe_load(app_config)
             my_application.app_yaml_parser(app_yaml)
             values = application_deploy(my_application, devices_list[current_device_id], devices_list, physical_network_link_list)
-            print(values)
             print("Need to implement listener")
+
+            with open(logfilename, 'a') as logfile:
+                if values[0]:
+                    logfile.write(f"\nDeployment success\n")
+                    logfile.write(f"application {my_application.id} successfully deployed\n")
+                    for i in range(len(my_application.processus_list)):
+                        logfile.write(f"Deploying processus {my_application.processus_list[i].id} on device {values[3][i]}\n")
+                    logfile.write("\n")
+                else:
+                    logfile.write(f"\nDeployment failure for application {my_application.id}\n")
+
+
+    return values[0],values[3]
 
 if __name__ == '__main__':
     main()

@@ -1,3 +1,6 @@
+logging : True
+
+logfile : log.txt
 
 database_url:
     device: db.sqlite

@@ -69,13 +69,14 @@ def application_deploy(app, device, devices_list, physical_network_link_list):
         device : Device, first device to try deployment, \"Deployment Request Receptor\" device
 
     Returns:
-        (deployed, latency, operational_latency, trivial)
-            deployed : int, number of deployed processus (all or none)
+        (deployment_success, latency, operational_latency, deployed_onto_devices)
+            deployment_success : Bool, deployment success boolean
             latency : float, cumulative latency along deployment procedure
             operational_latency : float, cumulative latency between deployed processus based on links quality
-            trivial : int, 1 if all process of a multi-process application are deployed on a single device, else 0
+            deployed_onto_devices : list, device ids for all devices onto application were deployed
     """
-    trivial = 0
+
+    deployment_success = True
     deployed = 0
     latency = 0
     operational_latency = 0
@@ -83,6 +84,8 @@ def application_deploy(app, device, devices_list, physical_network_link_list):
 
     deployed_onto_devices = list()
     first_dev_exclusion_list = list()
+
+    deployment_success = True
 
     tentatives = 0
     while len(deployed_onto_devices) < app.num_procs and tentatives < 2000:
@@ -98,7 +101,7 @@ def application_deploy(app, device, devices_list, physical_network_link_list):
             else:
                 distance_from_device = {i: device.routing_table[i][1] for i in device.routing_table}
                 if len(first_dev_exclusion_list) == len(distance_from_device):
-                    tentative = 2000
+                    deployment_success = False
                     break
                 else:
                     for j in first_dev_exclusion_list:
@@ -147,10 +150,8 @@ def application_deploy(app, device, devices_list, physical_network_link_list):
                     break
                 else:
                     deployed_onto_devices.pop()
-            #else:
-                #check_deployable(app.processus_list[len(deployed_onto_devices)], devices_list[device_id])
 
-    if tentatives == 2000: 
+    if (not deployment_success) or (tentatives == 2000):
         for i in range(len(deployed_onto_devices)):
             device_id = deployed_onto_devices[i]
 
@@ -162,17 +163,15 @@ def application_deploy(app, device, devices_list, physical_network_link_list):
             device_deployed_onto.setDeviceMemUsage(device_deployed_onto.mem_usage - app.processus_list[i].mem_request)
 
             devices_list[device_id] = device_deployed_onto
-        deployed = 0
+
+        deployment_success = False
         latency = 0
         operational_latency = 0
         deployed_onto_devices = list()
 
-    if app.num_procs !=1 and len(set(deployed_onto_devices)) ==1:
-        trivial = 1
-
     if len(deployed_onto_devices) !=0:
-        print(f"application : {app.id} , {app.num_procs} processus deployed on {deployed_onto_devices}")
+        print(f"application id : {app.id} , {app.num_procs} processus deployed on {deployed_onto_devices}")
     else:
-        print(f"application : {app.id} , {app.num_procs} processus not deployed")
+        print(f"application id : {app.id} , {app.num_procs} processus not deployed")
 
-    return deployed, latency, operational_latency, trivial
+    return deployment_success, latency, operational_latency, deployed_onto_devices

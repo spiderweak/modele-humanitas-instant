@@ -12,18 +12,36 @@ N_DEVICES = 40
 wifi_range = 9
 
 
-## Processing the distances for all nodes
-### Defining a custom distance to account for less coverage due to floor interception
-def custom_distance(x1,y1,x2,y2):
-    ### We'll processs an ellipsis, z2-z1 is a multiple of 3, using 15 allows for minimal but existing coverage between floors
-    distance = ((x2-x1)**2 + (y2-y1)**2)**0.5
+def custom_distance(x1, y1, z1, x2, y2, z2):
+    """
+    Defines a custom distance for device wireless coverage to account for less coverage due to floor interception.
+
+    Args:
+        x1 : x value, device 1
+        z1 : z value, device 1
+        y1 : y value, device 1
+        x2 : x value, device 2
+        y2 : y value, device 2
+        z2 : z value, device 2
+
+    Returns:
+        distance : int, distance (as coverage) between device 1 and device 2.
+    """
+    distance = ((x2-x1)**2 + (y2-y1)**2 + (z2-z1)**2)**0.5
     return distance
 
-# Let's now define devices and application
-# Each device will be represented with its coordinates and processing power
-# Device : id, x, y, z, cpu_limit, gpu_limit, disk_limit, mem_limit
-def generate_and_plot_devices(devices):
 
+def generate_and_plot_devices(devices):
+    """
+    Defines random devices position
+    Each device will be represented with its coordinates (x, y, z)
+
+    Args:
+        devices : list, List of coords
+
+    Returns:
+        None
+    """
     n_devices = N_DEVICES # Number of devices
 
     floor_size_x = 40 # in meters
@@ -31,17 +49,13 @@ def generate_and_plot_devices(devices):
 
 
     for j in range(n_devices):
-        # Device ID for dictionary storage
-        #dev_id = n_devices_per_floor*i+j
-
-        # Processing device position, random x,y, z fixed between various values
+        # Processing device position, random x, y, z fixed to between various values (z=0 for now)
         x = round(random.random() * floor_size_x,2)
         y = round(random.random() * floor_size_y,2)
+        z = 0
 
-        # Putting device in an array (dictionary possibility below)
-        # We get devices[dev_id] = [x,y,z]
-        devices.append([x,y])
-        #devices[f"dev-{dev_id}"] = (x,y,z)
+        devices.append([x,y,z])
+
 
     # We'll try our hand on plotting everything in a graph
 
@@ -56,7 +70,7 @@ def generate_and_plot_devices(devices):
 
     for i in range(len(devices)):
         for j in range(i+1, len(devices)):
-            distance = custom_distance(devices[i][0],devices[i][1],devices[j][0],devices[j][1])
+            distance = custom_distance(devices[i][0],devices[i][1],devices[i][2],devices[j][0],devices[j][1],devices[j][2])
             if distance < wifi_range:
                 ### We add edges if we have coverage
                 G.add_edge(i, j)
@@ -64,16 +78,11 @@ def generate_and_plot_devices(devices):
     # Let's try plotting the network
 
     # We alread have the coords, but let's process it again just to be sure
-    x_coords, y_coords = zip(*devices)
+    x_coords, y_coords, z_coords = zip(*devices)
 
     #  We create a 3D scatter plot again
     fig = plt.figure(figsize=(10, 10))
     ax = fig.add_subplot()
-
-    ## This is supposed to trace the network, but the edges part is not working for some reasons
-    #pos = {i: devices[i] for i in range(len(devices))}
-    #nx.draw_networkx_nodes(G, pos, node_size=10, node_color='blue', alpha=0.5, ax=ax)
-    #nx.draw_networkx_edges(G, pos, edge_color='gray', alpha=0.5, ax=ax)
 
     # Lets trace the graph by hand
     ## Placing the nodes
@@ -90,18 +99,28 @@ def generate_and_plot_devices(devices):
     # Title
     ax.set_title(f'Undirected Graph of Devices with Edge Distance < {wifi_range}')
 
-    # Print the graph
-    plt.savefig("graph.png")
+    # Saves the graph in a file
+    plt.savefig("fig/graph.png")
 
 
     # Let's try to code a routing table
-    # We have a device list here:
 def generate_routing_table(devices_list, physical_network_link_list):
+    """
+    Generates a routing table on each device
+    The function first lists the neighboring device, then iterate on the list to build a routing table based on shortest distance among links
+
+    Args:
+        devices : list, List of coords
+        physical_network_link_list: list, Lists the physical links between devices
+
+    Returns:
+        None
+    """
     for device_1 in devices_list:
         device_1_id = device_1.getDeviceID()
         for device_2 in devices_list:
             device_2_id = device_2.getDeviceID()
-            distance = custom_distance(device_1.x,device_1.y,device_2.x,device_2.y)
+            distance = custom_distance(device_1.x,device_1.y,device_1.z,device_2.x,device_2.y,device_2.z)
             new_physical_network_link_id = device_1_id*len(devices_list) + device_2_id
             if distance < wifi_range:
                 device_1.addToRoutingTable(device_2_id, device_2_id, distance)
@@ -148,6 +167,17 @@ def generate_routing_table(devices_list, physical_network_link_list):
 
 # Now, we can play with deployments
 def simulate_deployments(devices_list, physical_network_link_list):
+    """
+    Simulates a complete deployment.
+    Simulates 200 successive application deployments.
+
+    Args:
+        devices : list, List of coords
+        physical_network_link_list: list, Lists the physical links between devices
+
+    Returns:
+        None
+    """
     testings = 200
 
     latency_array = [0]
@@ -166,14 +196,18 @@ def simulate_deployments(devices_list, physical_network_link_list):
         device_id = random.choice(range(len(devices_list)))
 
         # deploy on device, get associated deployed status and latency
-        success, latency, operational_latency, trivial = application_deploy(application, devices_list[device_id], devices_list, physical_network_link_list)
+        success, latency, operational_latency, deployed_onto_devices = application_deploy(application, devices_list[device_id], devices_list, physical_network_link_list)
 
         latency_array.append(latency_array[-1]+latency)
         operational_latency_array.append(operational_latency_array[-1]+operational_latency)
         proc_success_array.append(proc_success_array[-1]+success)
+
+        if application.num_procs !=1 and len(set(deployed_onto_devices)) == 1:
+            trivial = 1
+
         trivial_array.append(trivial_array[-1]+trivial)
 
-        if success > 0:
+        if success:
             app_success_array.append(app_success_array[-1]+1)
             app_refused_array.append(app_refused_array[-1])
         else:
@@ -203,4 +237,4 @@ def simulate_deployments(devices_list, physical_network_link_list):
     ax1.set_title(f'Deployment results')
 
     # Print the graph
-    plt.savefig("results.png")
+    plt.savefig("fig/results.png")
