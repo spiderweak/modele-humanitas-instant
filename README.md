@@ -31,7 +31,7 @@ The global simulation creates a graph saved under *fig/graph.png* and plots succ
 Other possible argument are listed when running 
 
 ```
-python modelisation-2d.py --simulate=True
+python modelisation-2d.py -h
 ```
 
 ## Finding what you need
