@@ -23,11 +23,16 @@ The application_deploy function returns the mapping between virtual (docker) pro
 Running the overall simulation is possible with the --simulation=True flag
 
 ```
-python modelisation-2d.py --simulation=True
+python modelisation-2d.py --simulate=True
 ```
 
 The global simulation creates a graph saved under *fig/graph.png* and plots successful and rejected application deployment, as well as latency, on a given plot under the *fig/results.png* file
 
+Other possible argument are listed when running 
+
+```
+python modelisation-2d.py --simulate=True
+```
 
 ## Finding what you need
 
