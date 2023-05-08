@@ -188,6 +188,7 @@ def simulate_deployments(devices_list, physical_network_link_list):
     trivial_array = [0]
 
     for i in range(testings):
+        trivial = 0
         application = Application()
         application.randomAppInit()
         application.setAppID(i)

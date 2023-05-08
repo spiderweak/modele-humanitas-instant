@@ -2,6 +2,8 @@ from modules.Path import Path
 
 import logging
 
+MAX_TENTATIVES = 2000
+
 # Let's define how to deploy an application on the system.
 def deployable_proc(proc, device):
     """
@@ -91,7 +93,7 @@ def application_deploy(app, device, devices_list, physical_network_link_list):
     deployment_success = True
 
     tentatives = 0
-    while len(deployed_onto_devices) < app.num_procs and tentatives < 2000:
+    while len(deployed_onto_devices) < app.num_procs and tentatives < MAX_TENTATIVES:
 
         tentatives +=1
 
@@ -163,7 +165,7 @@ def application_deploy(app, device, devices_list, physical_network_link_list):
             else:
                 logging.debug(f"Impossible to deploy on {device_id}, testing next closest device")
 
-    if (not deployment_success) or (tentatives == 2000):
+    if (not deployment_success) or (tentatives == MAX_TENTATIVES):
         for i in range(len(deployed_onto_devices)):
             device_id = deployed_onto_devices[i]
 

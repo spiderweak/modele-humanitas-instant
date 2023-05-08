@@ -85,11 +85,10 @@ def main():
             loglevel = logging.WARNING
 
     # Log file
-    if parsed_yaml['logfile']:
+    try:
         logfilename = parsed_yaml['logfile']
-    else:
+    except KeyError:
         logfilename = 'log.txt'
-
 
     logging.basicConfig(filename=logfilename, encoding='utf-8', level=loglevel)
     devices = list()
@@ -109,6 +108,7 @@ def main():
 
     if options.simulate:
         simulate_deployments(devices_list, physical_network_link_list)
+        return 0,1
     else:
         current_device_id = random.randint(0, len(devices_list)-1)
         my_application = Application()
@@ -126,7 +126,7 @@ def main():
             else:
                 logging.error(f"\nDeployment failure for application {my_application.id}")
 
-    return values[0],values[3]
+        return values[0],values[3]
 
 if __name__ == '__main__':
     main()
